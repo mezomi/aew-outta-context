@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -42,7 +43,8 @@ def fakes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, object]:
 
 def run(*args: str) -> tuple[int, str]:
     result = runner.invoke(app, list(args))
-    return result.exit_code, result.output + (result.stderr if result.stderr_bytes else "")
+    out = result.output + (result.stderr if result.stderr_bytes else "")
+    return result.exit_code, re.sub(r"\x1b\[[0-9;]*m", "", out)  # CI forces color
 
 
 def test_version_and_help() -> None:
