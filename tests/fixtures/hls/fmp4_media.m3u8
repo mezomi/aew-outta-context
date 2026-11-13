@@ -1,0 +1,17 @@
+#EXTM3U
+#EXT-X-VERSION:7
+#EXT-X-TARGETDURATION:6
+#EXT-X-MEDIA-SEQUENCE:0
+#EXT-X-PLAYLIST-TYPE:VOD
+#EXT-X-MAP:URI="init.mp4"
+#EXTINF:6.000,
+seg-0.m4s
+#EXTINF:6.000,
+seg-1.m4s
+#EXTINF:6.000,
+seg-2.m4s
+#EXTINF:6.000,
+seg-3.m4s
+#EXTINF:4.500,
+https://cdn.example/other/seg-4.m4s
+#EXT-X-ENDLIST

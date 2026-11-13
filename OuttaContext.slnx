@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OuttaContext.Cli/OuttaContext.Cli.csproj" />
+    <Project Path="src/OuttaContext.Core/OuttaContext.Core.csproj" />
+    <Project Path="src/OuttaContext.Infrastructure/OuttaContext.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OuttaContext.Cli.Tests/OuttaContext.Cli.Tests.csproj" />
+    <Project Path="tests/OuttaContext.Core.Tests/OuttaContext.Core.Tests.csproj" />
+    <Project Path="tests/OuttaContext.Infrastructure.Tests/OuttaContext.Infrastructure.Tests.csproj" />
+    <Project Path="tests/OuttaContext.IntegrationTests/OuttaContext.IntegrationTests.csproj" />
+    <Project Path="tests/OuttaContext.TestKit/OuttaContext.TestKit.csproj" />
+  </Folder>
+</Solution>

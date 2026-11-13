@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The domain: records, rules, interfaces and use cases. No outside libraries on purpose. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="OuttaContext.Core.Tests" />
+  </ItemGroup>
+</Project>

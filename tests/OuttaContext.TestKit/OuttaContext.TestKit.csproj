@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Shared fakes and builders for every test project. Not a test project itself. -->
+  <PropertyGroup>
+    <IsTestKit>true</IsTestKit>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OuttaContext.Core\OuttaContext.Core.csproj" />
+  </ItemGroup>
+</Project>

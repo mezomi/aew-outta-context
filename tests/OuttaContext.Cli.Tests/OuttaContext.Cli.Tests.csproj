@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OuttaContext.Cli\OuttaContext.Cli.csproj" />
+    <ProjectReference Include="..\OuttaContext.TestKit\OuttaContext.TestKit.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console.Testing" />
+  </ItemGroup>
+</Project>

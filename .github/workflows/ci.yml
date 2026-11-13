@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Check formatting and naming
+        if: runner.os == 'Linux'
+        run: dotnet format --verify-no-changes
+      - name: Build (warnings are errors)
+        run: dotnet build -c Release
+      - name: Unit tests
+        run: dotnet test -c Release --no-build --filter-not-trait "Category=Integration" --ignore-exit-code 8
+      - name: Integration tests (real ffmpeg + yt-dlp)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pipx install "yt-dlp[default,curl-cffi]"
+          dotnet test -c Release --no-build --project tests/OuttaContext.IntegrationTests
+
+  build-exe:
+    name: Build outta.exe
+    needs: test
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Publish single-file exe
+        run: dotnet publish src/OuttaContext.Cli -c Release -r win-x64 -o dist
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          .\dist\outta.exe --version
+          .\dist\outta.exe --help
+          .\dist\outta.exe config show
+          .\dist\outta.exe episode status
+          # outta downloads yt-dlp's official Windows build; it must be able to act as Chrome and Firefox (Dailymotion).
+          .\dist\outta.exe update --yt-dlp-only
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $doctor = .\dist\outta.exe doctor --no-storage | Out-String
+          Write-Host $doctor
+          if ($doctor -notmatch "(?s)impersonation\s+yt-dlp can act as a browser.*firefox") {
+            Write-Error "yt-dlp on Windows cannot impersonate Chrome/Firefox (needed for Dailymotion)"
+            exit 1
+          }
+          $global:LASTEXITCODE = 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: outta-windows
+          path: dist/outta.exe
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Publish release
+        # Tags publish their own release; the main and working branches keep v<version> up to date,
+        # so releases/latest/download/outta.exe is always the newest build.
+        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/claude/outta-context-cli'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', steps.version.outputs.version) }}
+          target_commitish: ${{ github.sha }}
+          name: outta ${{ steps.version.outputs.version }}
+          make_latest: true
+          overwrite_files: true
+          body: |
+            Install or update on Windows (PowerShell):
+
+                irm https://github.com/mezomi/aew-outta-context/releases/latest/download/install.ps1 | iex
+
+            Already installed? Run `outta update`.
+
+            Built from ${{ github.sha }}.
+          files: |
+            dist/outta.exe
+            install.ps1
