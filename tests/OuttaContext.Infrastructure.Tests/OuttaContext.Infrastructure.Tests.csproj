@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OuttaContext.Infrastructure\OuttaContext.Infrastructure.csproj" />
+    <ProjectReference Include="..\OuttaContext.TestKit\OuttaContext.TestKit.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The `outta` command: Spectre.Console.Cli commands and the console reporter. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>outta</AssemblyName>
+    <RootNamespace>OuttaContext.Cli</RootNamespace>
+  </PropertyGroup>
+  <!-- `dotnet publish -r win-x64` makes one self-contained outta.exe: no .NET install needed. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OuttaContext.Core\OuttaContext.Core.csproj" />
+    <ProjectReference Include="..\OuttaContext.Infrastructure\OuttaContext.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="Spectre.Console.Cli" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CSharpFunctionalExtensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="OuttaContext.Cli.Tests" />
+  </ItemGroup>
+</Project>

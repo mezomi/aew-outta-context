@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Adapters: the only place that talks to yt-dlp, ffmpeg, rclone, SQLite, TOML files and the keychain. -->
+  <ItemGroup>
+    <ProjectReference Include="..\OuttaContext.Core\OuttaContext.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Tomlyn" />
+    <PackageReference Include="Meziantou.Framework.Win32.CredentialManager" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CSharpFunctionalExtensions" />
+    <InternalsVisibleTo Include="OuttaContext.Infrastructure.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Real ffmpeg + yt-dlp on generated videos served from localhost. Run them with the Integration trait filter (see README). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OuttaContext.Infrastructure\OuttaContext.Infrastructure.csproj" />
+    <ProjectReference Include="..\OuttaContext.TestKit\OuttaContext.TestKit.csproj" />
+  </ItemGroup>
+</Project>

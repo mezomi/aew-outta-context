@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The domain: value objects, rules, interfaces and use cases.
+    Only two packages on purpose: CSharpFunctionalExtensions (Result, Maybe, ValueObject)
+    and the dependency-injection abstractions (for AddOuttaCore).
+  -->
+  <ItemGroup>
+    <PackageReference Include="CSharpFunctionalExtensions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="CSharpFunctionalExtensions" />
+    <InternalsVisibleTo Include="OuttaContext.Core.Tests" />
+  </ItemGroup>
+</Project>
