@@ -13,23 +13,19 @@ scrape a page → clip a time range with a title → clip joins the current epis
 
 Pick **one** of these. Neither one clones the repository onto your computer.
 
-### Option A: download `outta.exe` (no Python needed)
+### Option A: one-line install of `outta.exe` (no Python needed)
 
-1. Download `outta.exe`:
-   - from the repo's **Releases** page (once a version tag such as `v0.1.0` has been pushed), or
-   - from the latest **CI** run: *Actions → CI → newest run → Artifacts → `outta-windows`* (you need to be signed in to GitHub; it downloads as a zip with `outta.exe` inside).
-2. Make a folder for it, for example `C:\Tools`, and put `outta.exe` there.
-3. Add that folder to your PATH once. In PowerShell:
-   ```powershell
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Tools", "User")
-   ```
-   Then open a **new** terminal.
-4. Check it works:
-   ```powershell
-   outta --version
-   ```
+Open PowerShell and paste:
 
-To update, download the new `outta.exe` and replace the old one. Updating is also how you get a newer yt-dlp, which is bundled inside the exe.
+```powershell
+irm https://github.com/mezomi/aew-outta-context/releases/latest/download/install.ps1 | iex
+```
+
+It downloads the latest `outta.exe` to `%LOCALAPPDATA%\Programs\outta`, adds that folder to your PATH, and tells you if ffmpeg is missing. Then open a **new** terminal and run `outta doctor`.
+
+**To update**, run the same line again. Your clips, episodes and settings are kept, because they live outside the exe.
+
+If you prefer to do it by hand, download `outta.exe` from the **Releases** page, put it in a folder such as `C:\Tools`, and add that folder to your PATH.
 
 ### Option B: install the command with `uv` (gets updates easily)
 
