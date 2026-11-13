@@ -51,6 +51,7 @@ class Doctor:
         credentials: CredentialStore,
         which: Callable[[str], str | None] = shutil.which,
         ytdlp_version: Callable[[], str | None] | None = None,
+        impersonation: Callable[[], str | None] | None = None,
     ) -> None:
         self.ffmpeg = ffmpeg
         self.settings = settings
@@ -58,9 +59,11 @@ class Doctor:
         self.credentials = credentials
         self.which = which
         self._ytdlp_version = ytdlp_version or _installed_ytdlp
+        self._impersonation = impersonation or _impersonation_support
 
     def run(self, test_storage: bool = True) -> list[Check]:
-        checks = [self.check_python(), self.check_ffmpeg(), self.check_ytdlp(), self.check_js()]
+        checks = [self.check_python(), self.check_ffmpeg(), self.check_ytdlp()]
+        checks += [self.check_impersonation(), self.check_js()]
         checks.append(self.check_clip_folder())
         checks.append(self.check_keyring())
         configs = self.storages.list()
@@ -101,6 +104,17 @@ class Doctor:
                 "yt-dlp", WARN, f"{version} is {age} days old; sites change often", update_hint()
             )
         return Check("yt-dlp", OK, version)
+
+    def check_impersonation(self) -> Check:
+        version = self._impersonation()
+        if version is None:
+            return Check(
+                "impersonation",
+                WARN,
+                "curl_cffi missing; Dailymotion may refuse some downloads",
+                update_hint(),
+            )
+        return Check("impersonation", OK, f"curl_cffi {version} (browser impersonation)")
 
     def check_js(self) -> Check:
         for exe in ("deno", "node", "bun"):
@@ -159,3 +173,11 @@ def _installed_ytdlp() -> str | None:
     except ImportError:
         return None
     return str(__version__)
+
+
+def _impersonation_support() -> str | None:
+    try:
+        import curl_cffi
+    except ImportError:
+        return None
+    return str(getattr(curl_cffi, "__version__", "installed"))

@@ -20,6 +20,7 @@ def make(
         CredentialStore(MemoryKeyring()),
         which=lambda n: f"/bin/{n}" if which.get(n) else None,
         ytdlp_version=lambda: ytdlp,
+        impersonation=lambda: "0.17.0" if ffmpeg_ok else None,
     )
     return doctor, reg
 
@@ -46,6 +47,7 @@ def test_all_good(tmp_path: Path) -> None:
     assert checks["clip folder"].state in (OK, WARN)
     assert checks["keychain"].state == OK
     assert checks["rclone"].state == OK
+    assert checks["impersonation"].state == OK
 
 
 def test_problems_come_with_fixes(tmp_path: Path) -> None:
@@ -58,6 +60,8 @@ def test_problems_come_with_fixes(tmp_path: Path) -> None:
     assert checks["yt-dlp"].state == WARN
     assert "days old" in checks["yt-dlp"].message
     assert checks["js runtime"].state == WARN
+    assert checks["impersonation"].state == WARN
+    assert "Dailymotion" in checks["impersonation"].message
     assert checks["rclone"].state == FAIL  # a cloud storage needs it
     assert "Rclone.Rclone" in checks["rclone"].fix
     assert "storage nas" not in checks

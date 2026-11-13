@@ -29,6 +29,8 @@ def main() -> None:
         # yt-dlp loads extractors and its YouTube JS solver dynamically
         "--collect-submodules", "yt_dlp",
         "--collect-all", "yt_dlp_ejs",
+        # browser impersonation (Dailymotion retries downloads as Chrome/Firefox)
+        "--collect-all", "curl_cffi",
         # keyring finds its OS backends (Windows Credential Manager) via entry points
         "--collect-submodules", "keyring.backends",
         "--copy-metadata", "keyring",
