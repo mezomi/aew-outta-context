@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+      - name: Type check
+        run: mypy src
+      - name: Unit tests
+        run: pytest --cov --cov-report=term
+      - name: Integration tests (real ffmpeg + yt-dlp)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pytest -m integration
+
+  build-exe:
+    name: Build outta.exe
+    needs: test
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install . pyinstaller
+      - name: Build
+        run: python packaging/build_exe.py
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          .\dist\outta.exe --version
+          .\dist\outta.exe --help
+          .\dist\outta.exe config show
+          .\dist\outta.exe episode status
+          .\dist\outta.exe doctor --no-storage; if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+          $global:LASTEXITCODE = 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: outta-windows
+          path: dist/outta.exe
+      - name: Publish release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/outta.exe
+          generate_release_notes: true

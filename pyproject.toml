@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "outta-context"
+version = "0.1.0"
+description = "Cut titled clips from Dailymotion/YouTube and build ~10 minute AEW Outta Context episodes."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.7",
+    "yt-dlp[default]>=2025.11.12",
+    "httpx>=0.27",
+    "platformdirs>=4.2",
+    "keyring>=25.0",
+    "tomli-w>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "pytest-mock>=3.14",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pre-commit>=3.7",
+]
+
+[project.scripts]
+outta = "outta_context.cli.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/outta_context"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "PT"]
+ignore = ["B008", "RUF001", "E501", "N818", "PT028"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["yt_dlp", "yt_dlp.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -m 'not integration and not network'"
+markers = [
+    "integration: needs a real ffmpeg (run with: pytest -m integration)",
+    "network: needs internet; also pass --run-network",
+]
+
+[tool.coverage.run]
+source = ["outta_context"]
+branch = true
