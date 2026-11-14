@@ -9,4 +9,8 @@ public sealed record MakeClipRequest(
     bool NoEpisode = false,
     bool Upload = false,
     string? Storage = null,
-    string? Referer = null);
+    string? Referer = null)
+{
+    /// <summary>With --replace [ID]: which clip this one replaces.</summary>
+    public ClipReplacement Replace { get; init; } = ClipReplacement.None;
+}

@@ -12,6 +12,9 @@ public interface ILibraryRepository
     // Clips
     Clip AddClip(NewClip clip);
 
+    /// <summary>Overwrites clip <paramref name="id"/> with new details; its ID, episode and position stay.</summary>
+    Clip ReplaceClip(long id, NewClip clip);
+
     Maybe<Clip> FindClip(long id);
 
     Maybe<Clip> FindClipByTitle(ClipTitle title);

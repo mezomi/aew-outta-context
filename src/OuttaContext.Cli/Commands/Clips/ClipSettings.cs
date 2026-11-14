@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using OuttaContext.Core.Clips;
 using OuttaContext.Core.Common;
 using OuttaContext.Core.Settings;
 using Spectre.Console;
@@ -28,6 +29,16 @@ public sealed class ClipSettings : GlobalSettings
     [CommandOption("--no-episode")]
     [Description("Don't add the clip to any episode.")]
     public bool NoEpisode { get; init; }
+
+    [CommandOption("--replace [ID]")]
+    [Description("Replace the clip with this --title (or clip ID) instead of refusing. It keeps its ID and episode place.")]
+    public FlagValue<long>? Replace { get; init; }
+
+    /// <summary>What --replace asked for (an ID of 0 means "the clip with this title").</summary>
+    public ClipReplacement Replacement =>
+        Replace is not { IsSet: true } flag ? ClipReplacement.None
+        : flag.Value > 0 ? ClipReplacement.OfClip(flag.Value)
+        : ClipReplacement.SameTitle;
 
     [CommandOption("--upload")]
     [Description("Upload to the default storage afterwards.")]
@@ -64,6 +75,16 @@ public sealed class ClipSettings : GlobalSettings
         if (CookiesFromBrowser is not null && BrowserName.Parse(CookiesFromBrowser).TryGetError(out Error? browserError))
         {
             return ValidationResult.Error(browserError.Message + " " + browserError.Hint);
+        }
+
+        if (Replace is { IsSet: true } && (Episode is not null || NoEpisode))
+        {
+            return ValidationResult.Error("--replace keeps the clip in its current episode; don't combine it with --episode or --no-episode.");
+        }
+
+        if (Replace is { IsSet: true, Value: < 0 })
+        {
+            return ValidationResult.Error("--replace ID must be a clip ID (see `outta episode status`).");
         }
 
         if (Episode is not null && NoEpisode)

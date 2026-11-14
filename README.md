@@ -66,6 +66,7 @@ Optional programs:
 outta config set-destination "C:\Clips"
 outta scrape dailymotion "https://example.com/article"
 outta clip "https://geo.dailymotion.com/player/xc394.html?video=k1ojSwOaH7psOtMbpGS" --range 45:30-45:38 --title "Steve the Clown"
+outta clip "https://geo.dailymotion.com/player/xc394.html?video=k1ojSwOaH7psOtMbpGS" --range 45:29-45:38 --title "Steve the Clown" --replace
 outta episode status
 outta episode build
 ```
@@ -91,7 +92,12 @@ Every command has `--help`. Add `-v` (`--verbose`) for details or `-q` (`--quiet
 
 ### `outta clip URL --range START-END --title TITLE`
 
-- **`--title` / `-t` is required.** It becomes the file name; a title that's already used is refused.
+- **`--title` / `-t` is required.** It becomes the file name; a title that's already used is refused
+  unless you add `--replace`.
+- **`--replace`** replaces the clip that already has this title (e.g. to fix its range).
+  **`--replace ID`** replaces clip ID, and can give it a new title. Either way the clip keeps its ID
+  and its place in its episode, the old file is deleted, and nothing changes if the new download fails.
+  If that episode was already built, rebuild it with `outta episode build "Episode N"`.
 - **`--range` / `-r` is required:** `90-112`, `1:30-1:52` or `1:02:10-1:02:30`.
 - **Clip cap:** ranges over **45 seconds** are refused before anything downloads, so a typo like
   `1:30-11:52` is caught. Change it with `outta config set max-clip-length 1:30`, or turn it off with `off`.

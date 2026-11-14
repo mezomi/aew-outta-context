@@ -28,7 +28,10 @@ public sealed class ClipCommand(MakeClipHandler handler, YtDlpOptions ytDlp, Spe
             settings.NoEpisode,
             Upload: settings.Upload || settings.To is not null,
             Storage: settings.To,
-            Referer: settings.Referer);
+            Referer: settings.Referer)
+        {
+            Replace = settings.Replacement,
+        };
         return handler.HandleAsync(request, cancellationToken).ToExitCode(reporter);
     }
 }

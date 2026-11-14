@@ -40,6 +40,20 @@ public sealed class SqliteLibraryRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void ReplaceClip_ClipInEpisode_KeepsIdAndPosition()
+    {
+        Episode episode = _repository.CreateEpisode(Values.Episode("Episode 1"), TenMinutes);
+        Clip old = _repository.AddClip(Values.NewClip("Steve", 8));
+        _repository.AttachClip(old.Id, episode.Id);
+
+        Clip replaced = _repository.ReplaceClip(old.Id, Values.NewClip("Steve fixed", 3, "/c/Steve fixed.mp4"));
+
+        (replaced.Id, replaced.Title.Value, replaced.Duration.Seconds, replaced.FilePath).ShouldBe((old.Id, "Steve fixed", 3.0, "/c/Steve fixed.mp4"));
+        (replaced.EpisodeId.GetValueOrDefault(), replaced.Position.GetValueOrDefault()).ShouldBe((episode.Id, 1));
+        _repository.ListClips().ShouldHaveSingleItem();
+    }
+
+    [Fact]
     public void FindClip_UnknownId_IsNone()
     {
         _repository.FindClip(99).HasNoValue.ShouldBeTrue();

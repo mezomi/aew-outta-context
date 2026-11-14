@@ -26,6 +26,22 @@ public sealed class InMemoryLibraryRepository : ILibraryRepository
         return saved;
     }
 
+    public Clip ReplaceClip(long id, NewClip clip)
+    {
+        Clip replaced = GetClip(id) with
+        {
+            Title = clip.Title,
+            Source = clip.Source,
+            SourceUrl = clip.SourceUrl,
+            Span = clip.Span,
+            Duration = clip.Duration,
+            FilePath = clip.FilePath,
+            PageUrl = clip.PageUrl,
+        };
+        Replace(replaced);
+        return replaced;
+    }
+
     public Maybe<Clip> FindClip(long id) => _clips.TryFirst(c => c.Id == id);
 
     public Maybe<Clip> FindClipByTitle(ClipTitle title) =>

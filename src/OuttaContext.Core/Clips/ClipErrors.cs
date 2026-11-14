@@ -14,7 +14,28 @@ public static class ClipErrors
         new("clip.title_unusable", $"\"{title}\" has no usable characters for a file name.", TitleHint);
 
     public static Error DuplicateTitle(ClipTitle title, long existingId) =>
-        new("clip.title_taken", $"A clip titled \"{title}\" already exists (ID {existingId}).", "Pick a different --title. Every clip title must be unique.");
+        new(
+            "clip.title_taken",
+            $"A clip titled \"{title}\" already exists (ID {existingId}).",
+            "Pick a different --title, or add --replace to replace that clip with this one.");
+
+    public static Error TitleTakenByAnother(ClipTitle title, long existingId, long replacingId) =>
+        new(
+            "clip.title_taken",
+            $"Clip {existingId} is already titled \"{title}\", so clip {replacingId} can't take that title.",
+            $"Pick a different --title, or use --replace {existingId} to replace clip {existingId} instead.");
+
+    public static Error NothingToReplace(ClipTitle title) =>
+        new(
+            "clip.nothing_to_replace",
+            $"There is no clip titled \"{title}\" to replace.",
+            "Check the title (`outta episode status` lists clips), use --replace ID, or drop --replace to make a new clip.");
+
+    public static Error CannotReplaceFile(string path, string problem) =>
+        new(
+            "clip.replace_failed",
+            $"Could not replace {path}: {problem}",
+            "Close any program that has the clip open (a video player or editor), then try again. The old clip is unchanged.");
 
     public static Error FileExists(string path) =>
         new("clip.file_exists", $"{path} already exists.", "Pick a different --title, or move that file away.");
@@ -28,6 +49,9 @@ public static class ClipErrors
 
     public static Error NotFound(string idOrTitle) =>
         new("clip.not_found", $"No clip with ID or title \"{idOrTitle}\".", "`outta episode status` lists clips and their IDs.");
+
+    public static Error NotFound(long id) =>
+        new("clip.not_found", $"There is no clip with ID {id} to replace.", "`outta episode status` lists clips and their IDs.");
 
     public static Error FileMissing(string path) =>
         new("clip.file_missing", $"The clip file is missing: {path}", "Restore the file or remove the clip with `outta episode remove CLIP_ID`.");

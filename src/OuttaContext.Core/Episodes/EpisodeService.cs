@@ -86,6 +86,10 @@ public sealed partial class EpisodeService(ILibraryRepository repository, OuttaS
         return new FinishedEpisode(built, opened);
     }
 
+    /// <summary>The episode a clip is in, with its totals, or none if it isn't in one.</summary>
+    public Maybe<EpisodeStatus> StatusOfClip(Clip clip) =>
+        clip.EpisodeId.Bind(repository.FindEpisode).Map(StatusOf);
+
     private EpisodeStatus StatusOf(Episode episode) => new(episode, repository.EpisodeClips(episode.Id));
 
     private Result<(Clip Clip, Episode Episode), Error> ClipInEpisode(long clipId) =>

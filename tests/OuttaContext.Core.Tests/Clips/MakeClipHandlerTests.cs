@@ -249,6 +249,96 @@ public sealed class MakeClipHandlerTests : IDisposable
         _builder.Repository.ListClips().ShouldHaveSingleItem();
     }
 
+    [Fact]
+    public async Task HandleAsync_ReplaceSameTitle_KeepsIdAndEpisodePlaceWithNewRange()
+    {
+        // Arrange
+        Clip first = (await Run(title: "Steve", range: "0:21-0:29")).ShouldSucceed().Clip;
+        (await Run(title: "Other", range: "0:01-0:05")).ShouldSucceed();
+
+        // Act
+        var result = await Run(title: "Steve", range: "0:10-0:13", replace: ClipReplacement.SameTitle);
+
+        // Assert
+        Clip replaced = result.ShouldSucceed().Clip;
+        replaced.Id.ShouldBe(first.Id);
+        replaced.Position.ShouldHaveValue().ShouldBe(1);
+        replaced.Span.ToString().ShouldBe("0:10-0:13");
+        _builder.Repository.ListClips().Count.ShouldBe(2);
+        File.Exists(replaced.FilePath).ShouldBeTrue();
+        Directory.GetFiles(_builder.Settings.ClipFolder, "*.new.mp4").ShouldBeEmpty();
+        _builder.Reporter.Texts("success").ShouldContain(s => s.StartsWith("Replaced clip 1 (\"Steve\", 0:21-0:29)", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplaceById_RenamesAndDeletesTheOldFile()
+    {
+        Clip first = (await Run(title: "Steve")).ShouldSucceed().Clip;
+
+        Clip replaced = (await Run(title: "Steve fixed", replace: ClipReplacement.OfClip(first.Id))).ShouldSucceed().Clip;
+
+        replaced.Id.ShouldBe(first.Id);
+        replaced.Title.Value.ShouldBe("Steve fixed");
+        File.Exists(first.FilePath).ShouldBeFalse();
+        File.Exists(replaced.FilePath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplaceWithoutMatchingTitle_FailsWithoutNetwork()
+    {
+        (await Run(title: "Nobody", replace: ClipReplacement.SameTitle)).ShouldFailWith("clip.nothing_to_replace");
+
+        _builder.Resolver.Requests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplaceUnknownId_Fails()
+    {
+        (await Run(replace: ClipReplacement.OfClip(9))).ShouldFailWith("clip.not_found");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplaceByIdWithAnotherClipsTitle_IsRefused()
+    {
+        Clip first = (await Run(title: "Steve")).ShouldSucceed().Clip;
+        (await Run(title: "Other")).ShouldSucceed();
+
+        Error error = (await Run(title: "Other", replace: ClipReplacement.OfClip(first.Id))).ShouldFailWith("clip.title_taken");
+
+        error.Hint.ShouldContain("--replace 2");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplacementDownloadFails_KeepsTheOldClip()
+    {
+        Clip first = (await Run(title: "Steve", range: "0:21-0:29")).ShouldSucceed().Clip;
+        _builder.Downloader.Failure = new Error("yt-dlp.network", "Network problem", "Check your connection");
+
+        (await Run(title: "Steve", range: "0:10-0:13", replace: ClipReplacement.SameTitle)).ShouldFailWith("yt-dlp.network");
+
+        File.Exists(first.FilePath).ShouldBeTrue();
+        _builder.Repository.FindClip(first.Id).ShouldHaveValue().Span.ToString().ShouldBe("0:21-0:29");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplaceClipInBuiltEpisode_WarnsToRebuild()
+    {
+        (await Run(title: "Steve")).ShouldSucceed();
+        _builder.Episodes.Finish(_builder.Episodes.Current(), "/x.mp4");
+
+        (await Run(title: "Steve", range: "0:01-0:03", replace: ClipReplacement.SameTitle)).ShouldSucceed();
+
+        _builder.Reporter.Texts("warn").ShouldContain(w => w.Contains("outta episode build \"Episode 1\"", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task HandleAsync_DuplicateTitle_HintMentionsReplace()
+    {
+        (await Run(title: "Steve")).ShouldSucceed();
+
+        (await Run(title: "Steve")).ShouldFailWith("clip.title_taken").Hint.ShouldContain("--replace");
+    }
+
     private Task<Result<MakeClipResult, Error>> Run(
         string url = YouTubeUrl,
         string range = "0:45-1:05",
@@ -257,7 +347,9 @@ public sealed class MakeClipHandlerTests : IDisposable
         bool upload = false,
         string? storage = null,
         string? referer = null,
-        string? episode = null) =>
+        string? episode = null,
+        ClipReplacement? replace = null) =>
         _builder.Build().HandleAsync(
-            new MakeClipRequest(url, range, title, episode, noEpisode, upload, storage, referer), TestContext.Current.CancellationToken);
+            new MakeClipRequest(url, range, title, episode, noEpisode, upload, storage, referer) { Replace = replace ?? ClipReplacement.None },
+            TestContext.Current.CancellationToken);
 }

@@ -107,6 +107,35 @@ public sealed class SqliteLibraryRepository : ILibraryRepository
         return GetClip(id);
     }
 
+    public Clip ReplaceClip(long id, NewClip clip)
+    {
+        using (SqliteConnection connection = Open())
+        {
+            connection.Execute(
+                """
+                UPDATE clips
+                SET title = @Title, source = @Source, source_url = @SourceUrl, start = @Start, "end" = @End,
+                    duration = @Duration, file_path = @FilePath, page_url = @PageUrl, created_at = @CreatedAt
+                WHERE id = @Id
+                """,
+                new
+                {
+                    Id = id,
+                    Title = clip.Title.Value,
+                    clip.Source,
+                    clip.SourceUrl,
+                    Start = clip.Span.Start.Seconds,
+                    End = clip.Span.End.Seconds,
+                    Duration = clip.Duration.Seconds,
+                    clip.FilePath,
+                    PageUrl = clip.PageUrl.GetValueOrDefault(),
+                    CreatedAt = Now(),
+                });
+        }
+
+        return GetClip(id);
+    }
+
     public Maybe<Clip> FindClip(long id) => QueryClips("WHERE id = @id", new { id }).TryFirst();
 
     public Maybe<Clip> FindClipByTitle(ClipTitle title) => QueryClips("WHERE title = @title", new { title = title.Value }).TryFirst();

@@ -34,6 +34,42 @@ public sealed class ClipCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task Clip_ReplaceSameTitle_ReplacesTheClip()
+    {
+        await _cli.WithClipFolderAsync();
+        (await _cli.RunAsync("clip", YouTubeUrl, "-r", "0:21-0:29", "-t", "Steve")).ExitCode.ShouldBe(0);
+
+        (int code, string output) = await _cli.RunAsync("clip", YouTubeUrl, "-r", "0:10-0:13", "-t", "Steve", "--replace");
+
+        code.ShouldBe(0, output);
+        output.ShouldContain("Replaced clip 1 (\"Steve\", 0:21-0:29)");
+        output.ShouldContain("Still at position 1 of \"Episode 1\"");
+    }
+
+    [Fact]
+    public async Task Clip_ReplaceById_GivesTheClipTheNewTitle()
+    {
+        await _cli.WithClipFolderAsync();
+        (await _cli.RunAsync("clip", YouTubeUrl, "-r", "0:21-0:29", "-t", "Steve")).ExitCode.ShouldBe(0);
+
+        (int code, string output) = await _cli.RunAsync("clip", YouTubeUrl, "-r", "0:10-0:13", "-t", "Steve fixed", "--replace", "1");
+
+        code.ShouldBe(0, output);
+        (await _cli.RunAsync("episode", "status")).Output.ShouldContain("Steve fixed");
+    }
+
+    [Theory]
+    [InlineData("--no-episode")]
+    [InlineData("--episode", "Episode 1")]
+    public async Task Clip_ReplaceWithEpisodeOption_IsAUsageError(params string[] extra)
+    {
+        (int code, string output) = await _cli.RunAsync(["clip", YouTubeUrl, "-r", "0-5", "-t", "x", "--replace", .. extra]);
+
+        code.ShouldBe(2);
+        output.ShouldContain("--replace keeps the clip in its current episode");
+    }
+
+    [Fact]
     public async Task Clip_UnknownCookieBrowser_IsAUsageErrorBeforeAnyDownload()
     {
         (int code, string output) = await _cli.RunAsync("clip", YouTubeUrl, "-r", "0-5", "-t", "x", "--cookies-from-browser", "lynx");
